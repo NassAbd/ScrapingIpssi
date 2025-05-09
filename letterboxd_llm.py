@@ -1,0 +1,71 @@
+import requests
+from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
+from transformers import pipeline
+
+# Modèle multilingue avec granularité sentimentale (1 à 5 étoiles)
+sentiment_pipeline = pipeline(
+    "sentiment-analysis",
+    model="nlptown/bert-base-multilingual-uncased-sentiment"
+)
+
+def convert_star_rating(star_str):
+    if not star_str:
+        return None
+    star_value = 0.0
+    full_stars = star_str.count('★')
+    half_star = '½' in star_str
+    star_value = full_stars + 0.5 if half_star else full_stars
+    return star_value
+
+def analyze_sentiment(review_text: str):
+    result = sentiment_pipeline(review_text[:512])  # Tronque si trop long
+    label = result[0]['label']  # e.g. '4 stars'
+    score = round(result[0]['score'], 3)
+    try:
+        sentiment_score = int(label[0])  # Prend le chiffre initial (1 à 5)
+    except ValueError:
+        sentiment_score = None
+    return {
+        'sentiment_score': sentiment_score,
+        'confidence': score
+    }
+
+def get_ratings_and_reviews(film_slug: str, page: int = 1):
+    url = f"https://letterboxd.com/film/{film_slug}/reviews/by/activity/page/{page}/"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except RequestException as e:
+        raise Exception(f"Erreur HTTP : {str(e)}")
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    reviews = []
+
+    review_blocks = soup.find_all('div', class_='film-detail-content')
+
+    for block in review_blocks:
+        rating_tag = block.find('span', class_='rating')
+        raw_rating = rating_tag.text.strip() if rating_tag else None
+        numeric_rating = convert_star_rating(raw_rating)
+
+        review_text_tag = block.find('div', class_='body-text')
+        review = review_text_tag.get_text(separator=" ", strip=True) if review_text_tag else None
+
+        if review:
+            sentiment_dict = analyze_sentiment(review)
+            reviews.append({
+                'rating': numeric_rating,
+                'review': review,
+                'sentiment': sentiment_dict
+            })
+
+    return reviews
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    film_slug = "conclave"  # Remplace par le slug du film
+    results = get_ratings_and_reviews(film_slug)
+    for item in results:
+        print(item)
