@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 import requests
 import pandas as pd
@@ -37,14 +38,21 @@ def get_poster_url(movie):
 # --- Fonction d'analyse de critiques (Letterboxd API locale) ---
 def load_or_fetch_data(film_slug, max_pages=3):
     all_reviews = []
+
     for page in range(1, max_pages + 1):
         url = f"http://localhost:8000/reviews?film_slug={film_slug}&page={page}"
         response = requests.get(url)
+        
         if response.status_code == 200:
             all_reviews.extend(response.json())
+        elif response.status_code == 429:
+            # Affiche immédiatement l'erreur 429 sans réessayer
+            st.error("Trop de requêtes envoyées. Veuillez réessayer plus tard.")
+            return []  # Retourner une liste vide immédiatement
         else:
             st.error(f"Erreur lors de l'appel API page {page}: {response.text}")
             break
+
     return all_reviews
 
 # --- Interface Streamlit ---
