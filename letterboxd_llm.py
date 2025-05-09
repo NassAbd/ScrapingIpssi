@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 from transformers import pipeline
+import re
 
 # Modèle multilingue avec granularité sentimentale (1 à 5 étoiles)
 sentiment_pipeline = pipeline(
@@ -33,6 +34,10 @@ def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
     page = 1
     all_reviews = []
     film_slug = film_slug.replace(" ", "-").lower()
+
+    response_test = requests.get(f"https://letterboxd.com/film/{film_slug}/reviews/by/activity/page/{page}/")
+    if response_test.status_code != 200:
+        film_slug = re.sub(r"-\d+$", "", film_slug)
 
     while True:
         url = f"https://letterboxd.com/film/{film_slug}/reviews/by/activity/page/{page}/"
@@ -76,7 +81,7 @@ def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-    film_slug = "iron man"
+    film_slug = "spider-man-2002"
     results = get_all_ratings_and_reviews(film_slug, max_pages=3)
     for item in results:
         print(item)
