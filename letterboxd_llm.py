@@ -1,6 +1,6 @@
 import requests
+from requests.exceptions import RequestException, HTTPError
 from bs4 import BeautifulSoup
-from requests.exceptions import RequestException
 from transformers import pipeline
 import re
 
@@ -44,10 +44,12 @@ def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
         print(f"Scraping page {page} : {url}")
         try:
             response = requests.get(url)
+            if response.status_code == 429:
+                raise HTTPError("Too Many Requests", response=response)
             response.raise_for_status()
-        except RequestException as e:
+        except HTTPError as e:
             print(f"Erreur HTTP sur la page {page} : {str(e)}")
-            break
+            raise
 
         soup = BeautifulSoup(response.text, 'html.parser')
         review_blocks = soup.find_all('div', class_='film-detail-content')

@@ -1,4 +1,5 @@
 import time
+import json
 import streamlit as st
 import requests
 import pandas as pd
@@ -9,6 +10,10 @@ from dotenv import load_dotenv
 # --- Clé API TMDB ---
 load_dotenv()  # Charge le fichier .env
 API_KEY = os.getenv("API_KEY")
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/90.0.4430.212 Safari/537.36"
+}
 
 # --- Fonctions TMDB ---
 def search_movie_suggestions(query):
@@ -21,7 +26,7 @@ def search_movie_suggestions(query):
         "language": "fr-FR",
         "page": 1
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, headers=headers)
     data = response.json()
     return data.get("results", [])
 
@@ -41,21 +46,16 @@ def load_or_fetch_data(film_slug, max_pages=3):
 
     for page in range(1, max_pages + 1):
         url = f"http://localhost:8000/reviews?film_slug={film_slug}&page={page}"
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         
         if response.status_code == 200:
             all_reviews.extend(response.json())
-        elif response.status_code == 429:
-            # Affiche immédiatement l'erreur 429 sans réessayer
-            st.error("Trop de requêtes envoyées. Veuillez réessayer plus tard.")
-            return []  # Retourner une liste vide immédiatement
         else:
-            st.error(f"Erreur lors de l'appel API page {page}: {response.text}")
+            st.error(f"{json.loads(response.text).get("detail", "Une erreur est survenue.")}")
             break
 
     return all_reviews
 
-# --- Interface Streamlit ---
 st.set_page_config(page_title="Analyse de films", layout="centered")
 st.title("🎥 Recherche & Analyse de films")
 
@@ -85,7 +85,7 @@ if user_query:
 
         # Analyse des critiques Letterboxd
         st.subheader("🧠 Analyse des critiques Letterboxd")
-        film_slug = st.text_input("Slug Letterboxd (ou laisse celui proposé) :", slug_suggestion)
+        film_slug = st.text_input("Slug Letterboxd (forme conseillée: nom-du-film-année) :", slug_suggestion)
         max_pages = st.slider("Nombre de pages à scraper :", 1, 10, 3)
 
         if st.button("Charger les données Letterboxd"):
@@ -137,7 +137,7 @@ if user_query:
                 use_container_width=True
             )
 
-            st.metric("🔍 Confiance moyenne", f"{df['confidence'].mean():.2f}")
+            st.metric("🔍 Confiance moyenne du modèle", f"{df['confidence'].mean():.2f}")
 
             st.subheader("📝 Tableau des critiques")
             st.dataframe(df[["rating", "sentiment_score", "confidence", "review"]])
