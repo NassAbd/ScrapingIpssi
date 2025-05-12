@@ -5,6 +5,7 @@ from transformers import pipeline
 import re
 
 # Modèle multilingue avec granularité sentimentale (1 à 5 étoiles)
+# 1: Très mauvais, 5: Excellent
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
     model="nlptown/bert-base-multilingual-uncased-sentiment"
@@ -19,7 +20,7 @@ def convert_star_rating(star_str):
 
 def analyze_sentiment(review_text: str):
     result = sentiment_pipeline(review_text[:512])  # Tronque si trop long
-    label = result[0]['label']  # e.g. '4 stars'
+    label = result[0]['label']
     score = round(result[0]['score'], 3)
     try:
         sentiment_score = int(label[0])  # Extrait le chiffre
@@ -81,7 +82,6 @@ def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
 
     return all_reviews
 
-# Exemple d'utilisation
 if __name__ == "__main__":
     film_slug = "spider-man-2002"
     results = get_all_ratings_and_reviews(film_slug, max_pages=3)

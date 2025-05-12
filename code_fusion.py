@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 # --- Clé API TMDB ---
-load_dotenv()  # Charge le fichier .env
+load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
 headers = {
@@ -74,7 +74,6 @@ if user_query:
         selected_movie = movie_choices[selected_title]
         poster_url = get_poster_url(selected_movie)
 
-        # Utilisation du format_title comme slug Letterboxd suggéré
         slug_suggestion = format_title(selected_movie)
 
         st.markdown(f"### 🎬 {selected_movie['title']} ({selected_movie.get('release_date', 'N/A')[:4]})")

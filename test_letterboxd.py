@@ -5,7 +5,6 @@ from requests.exceptions import RequestException
 def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
     page = 1
     all_reviews = []
-    #regex pour remplacer les espaces par des tirets 
     film_slug = film_slug.replace(" ", "-").lower()
     while True:
         url = f"https://letterboxd.com/film/{film_slug}/reviews/by/activity/page/{page}/"
@@ -44,10 +43,9 @@ def get_all_ratings_and_reviews(film_slug: str, max_pages: int = None):
 
     return all_reviews
 
-# Exemple d'utilisation
 if __name__ == "__main__":
     film_slug = "iron man"
-    results = get_all_ratings_and_reviews(film_slug, max_pages=5)  # change max_pages selon besoin
+    results = get_all_ratings_and_reviews(film_slug, max_pages=5)
     for item in results:
         print(item)
 
