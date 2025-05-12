@@ -1,5 +1,5 @@
 import requests
-from requests.exceptions import RequestException, HTTPError
+from requests.exceptions import HTTPError
 from bs4 import BeautifulSoup
 from transformers import pipeline
 import re
