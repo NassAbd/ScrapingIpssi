@@ -41,20 +41,23 @@ def get_poster_url(movie):
     return base_url + poster_path if poster_path else None
 
 # --- Fonction d'analyse de critiques (Letterboxd API locale) ---
-def load_or_fetch_data(film_slug, max_pages=3):
-    all_reviews = []
+def load_or_fetch_data(film_slug, max_pages=1):
+    url = f"http://localhost:8000/reviews?film_slug={film_slug}&max_pages={max_pages}"
 
-    for page in range(1, max_pages + 1):
-        url = f"http://localhost:8000/reviews?film_slug={film_slug}&page={page}"
-        response = requests.get(url, headers=headers)
-        
-        if response.status_code == 200:
-            all_reviews.extend(response.json())
-        else:
-            st.error(f"{json.loads(response.text).get("detail", "Une erreur est survenue.")}")
-            break
-
-    return all_reviews
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        try:
+            error_detail = json.loads(response.text).get("detail", "Une erreur est survenue.")
+        except Exception:
+            error_detail = "Erreur inconnue lors de l'appel API."
+        st.error(f"❌ {error_detail}")
+        return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Erreur de connexion à l'API : {str(e)}")
+        return []
 
 st.set_page_config(page_title="Analyse de films", layout="centered")
 st.title("🎥 Recherche & Analyse de films")
