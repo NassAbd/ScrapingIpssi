@@ -15,6 +15,10 @@ class ReviewResult(BaseModel):
     review: str
     sentiment: SentimentResult
 
+@app.get("/ping")
+def ping():
+    """Endpoint de test pour vérifier que l'API est en ligne."""
+    return {"status": "ok"}
 
 #http://localhost:8000/reviews?film_slug=iron man&max_pages=2
 @app.get("/reviews", response_model=List[ReviewResult])

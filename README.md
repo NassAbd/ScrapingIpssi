@@ -32,14 +32,15 @@ Application Python conçue pour rechercher des films via l'API TMDB (The Movie D
    API_KEY=your_tmdb_api_key
    ```
 
-3. Lancez le serveur fastapi :
+2. Lancez le serveur fastapi + l'app streamlit :
+
+   ```bash
+   python .\run_app.py
+   ```
+
+3. Ou lancer séparément :
 
    ```bash
    uvicorn main:app --reload
-   ```
-
-3. Lancez l'application Streamlit :
-
-   ```bash
    streamlit run code_fusion.py
    ```
